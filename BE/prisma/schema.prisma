@@ -1,0 +1,383 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMIN
+  TEAM_LEAD
+  AGENT
+  VIEWER
+  CUSTOMER
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  PENDING
+  ON_HOLD
+  SOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketChannel {
+  WEB
+  EMAIL
+  API
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  passwordHash String?
+  role         UserRole  @default(CUSTOMER)
+  orgId        String?
+  ssoProvider  String?
+  lastLoginAt  DateTime?
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  org                 Organization?   @relation("OrgUsers", fields: [orgId], references: [id])
+  memberships         Membership[]
+  teamMemberships     TeamMember[]
+  ticketsAsRequester  Ticket[]        @relation("TicketRequester")
+  ticketsAsAssignee   Ticket[]        @relation("TicketAssignee")
+  comments            Comment[]
+  auditLogs           AuditLog[]
+  kbArticles          KbArticle[]
+  kbViews             KbArticleView[]
+  invitationsSent     Invitation[]    @relation("InvitedBy")
+  cannedResponses     CannedResponse[]
+
+  @@index([email])
+  @@index([orgId])
+  @@map("users")
+}
+
+model Organization {
+  id                 String    @id @default(uuid())
+  name               String
+  domain             String?   @unique
+  planTier           String    @default("free")
+  defaultSlaPolicyId String?
+  deletedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  defaultSlaPolicy SlaPolicy?       @relation("OrgDefaultSla", fields: [defaultSlaPolicyId], references: [id])
+  users            User[]           @relation("OrgUsers")
+  memberships      Membership[]
+  teams            Team[]
+  tickets          Ticket[]
+  slaPolicies      SlaPolicy[]      @relation("OrgSlaPolicies")
+  kbArticles       KbArticle[]
+  kbCategories     KbCategory[]
+  invitations      Invitation[]
+  webhooks         Webhook[]
+  cannedResponses  CannedResponse[]
+
+  @@map("organizations")
+}
+
+model Membership {
+  id        String     @id @default(uuid())
+  roles     UserRole[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  userId String
+  user   User         @relation(fields: [userId], references: [id])
+  orgId  String
+  org    Organization @relation(fields: [orgId], references: [id])
+
+  @@unique([userId, orgId])
+  @@index([orgId])
+  @@map("memberships")
+}
+
+model Team {
+  id        String    @id @default(uuid())
+  name      String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id])
+
+  members         TeamMember[]
+  tickets         Ticket[]
+  cannedResponses CannedResponse[]
+
+  @@index([orgId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model SlaPolicy {
+  id                   String         @id @default(uuid())
+  name                 String
+  priority             TicketPriority
+  firstResponseMinutes Int
+  resolutionMinutes    Int
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  orgId String
+  org   Organization @relation("OrgSlaPolicies", fields: [orgId], references: [id])
+
+  tickets       Ticket[]
+  orgsAsDefault Organization[] @relation("OrgDefaultSla")
+
+  @@index([orgId])
+  @@map("sla_policies")
+}
+
+model Ticket {
+  id           String         @id @default(uuid())
+  subject      String
+  description  String
+  status       TicketStatus   @default(NEW)
+  priority     TicketPriority @default(MEDIUM)
+  channel      TicketChannel  @default(WEB)
+  customFields Json?
+  slaBreachAt  DateTime?
+  deletedAt    DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id])
+  requesterId String
+  requester   User         @relation("TicketRequester", fields: [requesterId], references: [id])
+  assigneeId  String?
+  assignee    User?        @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  teamId      String?
+  team        Team?        @relation(fields: [teamId], references: [id])
+  slaPolicyId String?
+  slaPolicy   SlaPolicy?   @relation(fields: [slaPolicyId], references: [id])
+
+  comments    Comment[]
+  attachments Attachment[]
+  csatSurveys CsatSurvey[]
+
+  @@index([orgId])
+  @@index([requesterId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([slaBreachAt])
+  @@map("tickets")
+}
+
+model Comment {
+  id         String    @id @default(uuid())
+  body       String
+  isInternal Boolean   @default(false)
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  attachments Attachment[]
+
+  @@index([ticketId])
+  @@map("comments")
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  s3Key     String
+  filename  String
+  sizeBytes Int
+  mimeType  String
+  createdAt DateTime @default(now())
+
+  ticketId  String?
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id])
+  commentId String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+
+  @@map("attachments")
+}
+
+model KbCategory {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgId    String
+  org      Organization @relation(fields: [orgId], references: [id])
+  parent   KbCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children KbCategory[] @relation("CategoryTree")
+  articles KbArticle[]
+
+  @@index([orgId])
+  @@map("kb_categories")
+}
+
+model KbArticle {
+  id        String        @id @default(uuid())
+  title     String
+  body      String
+  status    ArticleStatus @default(DRAFT)
+  deletedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id])
+  authorId   String
+  author     User         @relation(fields: [authorId], references: [id])
+  categoryId String?
+  category   KbCategory?  @relation(fields: [categoryId], references: [id])
+
+  views KbArticleView[]
+
+  @@index([orgId])
+  @@index([status])
+  @@map("kb_articles")
+}
+
+model KbArticleView {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  articleId String
+  article   KbArticle @relation(fields: [articleId], references: [id])
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+
+  @@map("kb_article_views")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  action     String
+  diff       Json?
+  createdAt  DateTime @default(now())
+
+  actorId String?
+  actor   User?   @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+model CsatSurvey {
+  id          String    @id @default(uuid())
+  score       Int?
+  comment     String?
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+
+  @@map("csat_surveys")
+}
+
+model CannedResponse {
+  id        String   @id @default(uuid())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id])
+  teamId      String?
+  team        Team?        @relation(fields: [teamId], references: [id])
+  createdById String
+  createdBy   User         @relation(fields: [createdById], references: [id])
+
+  @@index([orgId])
+  @@map("canned_responses")
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  url       String
+  events    String[]
+  secret    String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orgId String
+  org   Organization @relation(fields: [orgId], references: [id])
+
+  @@index([orgId])
+  @@map("webhooks")
+}
+
+model Invitation {
+  id           String           @id @default(uuid())
+  email        String
+  rolesToGrant UserRole[]
+  tokenHash    String           @unique
+  expiresAt    DateTime
+  status       InvitationStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  orgId           String
+  org             Organization @relation(fields: [orgId], references: [id])
+  invitedByUserId String
+  invitedBy       User         @relation("InvitedBy", fields: [invitedByUserId], references: [id])
+
+  @@index([tokenHash])
+  @@index([email, orgId])
+  @@map("invitations")
+}
