@@ -92,18 +92,13 @@ export async function createInvitation(
 
   // #region agent log
   let queueJob: unknown;
-  try {
+ 
     queueJob = await emailQueue.add('send-invitation', {
       to: email,
       orgName: org.name,
       token,
       expiresAt,
     });
-    fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'A',location:'organization.service.ts:93',message:'emailQueue.add SUCCESS',data:{jobId:(queueJob as {id?:string})?.id,to:email,expiresAtType:typeof expiresAt,expiresAtValue:String(expiresAt)},timestamp:Date.now()})}).catch(()=>{});
-  } catch (err) {
-    fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'A',location:'organization.service.ts:93',message:'emailQueue.add FAILED',data:{error:(err as Error).message},timestamp:Date.now()})}).catch(()=>{});
-    throw err;
-  }
   // #endregion
 
   return { token, expiresAt };
