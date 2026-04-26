@@ -68,12 +68,24 @@ async function sendInvitation(job: Job): Promise<void> {
     to: string; orgName: string; token: string; expiresAt: string;
   };
 
+  // #region agent log
+  fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'D',location:'email.worker.ts:sendInvitation:entry',message:'sendInvitation job picked up by worker',data:{jobId:job.id,to,orgName,expiresAtType:typeof expiresAt,expiresAtValue:String(expiresAt)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
   const template = loadTemplate('invitation');
+  // #region agent log
+  fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'C',location:'email.worker.ts:sendInvitation:templateLoaded',message:'template loaded successfully',data:{templateType:typeof template},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
   const html = template({
     orgName,
     acceptUrl: `${env.CLIENT_URL}/auth/accept-invite?token=${token}`,
     expiresAt: new Date(expiresAt).toLocaleDateString(),
   });
+
+  // #region agent log
+  fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'B',location:'email.worker.ts:sendInvitation:preSend',message:'about to call transporter.sendMail',data:{from:env.SMTP_FROM,to,smtpHost:env.SMTP_HOST,smtpPort:env.SMTP_PORT,smtpSecure:env.SMTP_SECURE,smtpUserSet:!!env.SMTP_USER},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
   await transporter.sendMail({
     from: env.SMTP_FROM,
@@ -81,6 +93,10 @@ async function sendInvitation(job: Job): Promise<void> {
     subject: `You've been invited to join ${orgName} on SupportDesk Pro`,
     html,
   });
+
+  // #region agent log
+  fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'B',location:'email.worker.ts:sendInvitation:postSend',message:'transporter.sendMail SUCCESS',data:{to},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 }
 
 async function sendCsatSurvey(job: Job): Promise<void> {
@@ -127,4 +143,7 @@ export const emailWorker = new Worker(
 
 emailWorker.on('failed', (job, err) => {
   logger.error('Email job failed', { jobId: job?.id, jobName: job?.name, err: err.message });
+  // #region agent log
+  fetch('http://127.0.0.1:7665/ingest/b69e561d-1f4d-46e7-8604-4effe28ff4f1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'6f1a37'},body:JSON.stringify({sessionId:'6f1a37',hypothesisId:'B-C-D',location:'email.worker.ts:workerFailed',message:'email worker job FAILED',data:{jobId:job?.id,jobName:job?.name,error:err.message,stack:err.stack?.slice(0,500)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 });
