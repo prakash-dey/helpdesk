@@ -16,6 +16,11 @@ export async function login(payload: LoginPayload) {
   return data.data;
 }
 
+export async function refreshSession() {
+  const { data } = await apiClient.post<AuthResponse>('/auth/refresh');
+  return data.data;
+}
+
 export async function logoutRequest() {
   await apiClient.post('/auth/logout');
 }

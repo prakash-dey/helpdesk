@@ -17,7 +17,7 @@ type AuthState = {
 const initialState: AuthState = {
     accessToken: null,
     user: null,
-    isSessionRestoring: false,
+    isSessionRestoring: true,
 };
 
 const authSlice = createSlice({
