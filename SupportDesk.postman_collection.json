@@ -1,30 +1,112 @@
 {
   "info": {
-    "name": "SupportDesk Pro API",
-    "description": "Full Postman collection for the SupportDesk Pro REST API.\n\n**Setup:**\n1. Set the `baseUrl` variable to `http://localhost:4000`\n2. Call **POST /auth/register** or **POST /auth/login** — the test script will auto-set `accessToken` and `orgId`.\n3. All authenticated requests will automatically use the stored token.\n\n**Variables used:**\n- `baseUrl` — API base (default: http://localhost:4000)\n- `accessToken` — set automatically after login/register\n- `orgId` — set automatically after login/register\n- `ticketId`, `teamId`, `userId`, `commentId`, `policyId`, `webhookId`, `articleId`, `categoryId`, `responseId`, `invitationId`, `attachmentId`, `surveyId` — set these manually after creating resources",
+    "name": "SupportDesk Pro Backend API",
+    "description": "Postman collection for the SupportDesk Pro backend REST API.\n\nSetup:\n1. Start the backend at `http://localhost:4000`.\n2. Import this collection into Postman.\n3. Run `Auth / Register` or `Auth / Login`. The test script stores `accessToken`, `userId`, `orgId`, and `userRole` from the JWT.\n4. Create resources in normal order: team/SLA policy -> ticket -> comments/attachments/CSAT/webhooks/etc.\n\nCollection variables are used for reusable IDs. Create requests include small test scripts that save returned IDs when the response contains `data.id`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:4000", "type": "string" },
-    { "key": "accessToken", "value": "", "type": "string" },
-    { "key": "orgId", "value": "", "type": "string" },
-    { "key": "ticketId", "value": "", "type": "string" },
-    { "key": "commentId", "value": "", "type": "string" },
-    { "key": "teamId", "value": "", "type": "string" },
-    { "key": "userId", "value": "", "type": "string" },
-    { "key": "policyId", "value": "", "type": "string" },
-    { "key": "webhookId", "value": "", "type": "string" },
-    { "key": "articleId", "value": "", "type": "string" },
-    { "key": "categoryId", "value": "", "type": "string" },
-    { "key": "responseId", "value": "", "type": "string" },
-    { "key": "invitationId", "value": "", "type": "string" },
-    { "key": "attachmentId", "value": "", "type": "string" },
-    { "key": "surveyId", "value": "", "type": "string" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userRole",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orgId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "commentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "teamId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "policyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "webhookId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "articleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "responseId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invitationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attachmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "surveyId",
+      "value": "",
+      "type": "string"
+    }
   ],
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
   },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level Bearer auth uses {{accessToken}}."
+        ]
+      }
+    }
+  ],
   "item": [
     {
       "name": "Health",
@@ -32,10 +114,23 @@
         {
           "name": "Health Check",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/health", "host": ["{{baseUrl}}"], "path": ["api", "v1", "health"] },
-            "description": "Returns `{ ok: true }` when the server is running."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Checks whether the API server is running. Expected response: `{ ok: true, ts: string }`.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         }
       ]
@@ -44,121 +139,258 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Register",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.accessToken) {",
-                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
-                  "}",
-                  "if (res.data && res.data.user && res.data.user.orgId) {",
-                  "  pm.collectionVariables.set('orgId', res.data.user.orgId);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "Register Admin + Organization",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Creates an admin user and organization. Stores JWT-derived `accessToken`, `userId`, `orgId`, and `userRole`.",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"Admin User\",\n  \"orgName\": \"Acme Support\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "register"] },
-            "description": "Creates a new organisation and admin user. Rate-limited. Sets `accessToken` and `orgId` automatically.\n\n**Body:**\n- `email` (required)\n- `password` min 8 chars (required)\n- `name` (required)\n- `orgName` (optional — defaults to user's name)"
-          }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function decodeJwt(token) {",
+                  "  const payload = token.split(\".\")[1];",
+                  "  const normalized = payload.replace(/-/g, \"+\").replace(/_/g, \"/\");",
+                  "  return JSON.parse(atob(normalized));",
+                  "}",
+                  "const json = pm.response.json();",
+                  "const token = json && json.data && json.data.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set(\"accessToken\", token);",
+                  "  const claims = decodeJwt(token);",
+                  "  if (claims.sub) pm.collectionVariables.set(\"userId\", claims.sub);",
+                  "  if (claims.orgId) pm.collectionVariables.set(\"orgId\", claims.orgId);",
+                  "  if (claims.role) pm.collectionVariables.set(\"userRole\", claims.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.accessToken) {",
-                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
-                  "}",
-                  "if (res.data && res.data.user && res.data.user.orgId) {",
-                  "  pm.collectionVariables.set('orgId', res.data.user.orgId);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
           "request": {
-            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates an existing user. The refresh token is stored as an httpOnly cookie by Postman cookie handling.",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"] },
-            "description": "Authenticates a user. Returns access token in body and sets refresh token as an httpOnly cookie. Sets `accessToken` and `orgId` automatically."
-          }
-        },
-        {
-          "name": "Refresh Token",
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.accessToken) {",
-                  "  pm.collectionVariables.set('accessToken', res.data.accessToken);",
+                  "function decodeJwt(token) {",
+                  "  const payload = token.split(\".\")[1];",
+                  "  const normalized = payload.replace(/-/g, \"+\").replace(/_/g, \"/\");",
+                  "  return JSON.parse(atob(normalized));",
+                  "}",
+                  "const json = pm.response.json();",
+                  "const token = json && json.data && json.data.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set(\"accessToken\", token);",
+                  "  const claims = decodeJwt(token);",
+                  "  if (claims.sub) pm.collectionVariables.set(\"userId\", claims.sub);",
+                  "  if (claims.orgId) pm.collectionVariables.set(\"orgId\", claims.orgId);",
+                  "  if (claims.role) pm.collectionVariables.set(\"userRole\", claims.role);",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Refresh Token",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "POST",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "refresh"] },
-            "description": "Issues a new access token using the `refresh_token` httpOnly cookie. Postman must have cookie handling enabled.\n\nUpdates `accessToken` automatically."
-          }
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Rotates the refresh token cookie and returns a new access token.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function decodeJwt(token) {",
+                  "  const payload = token.split(\".\")[1];",
+                  "  const normalized = payload.replace(/-/g, \"+\").replace(/_/g, \"/\");",
+                  "  return JSON.parse(atob(normalized));",
+                  "}",
+                  "const json = pm.response.json();",
+                  "const token = json && json.data && json.data.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set(\"accessToken\", token);",
+                  "  const claims = decodeJwt(token);",
+                  "  if (claims.sub) pm.collectionVariables.set(\"userId\", claims.sub);",
+                  "  if (claims.orgId) pm.collectionVariables.set(\"orgId\", claims.orgId);",
+                  "  if (claims.role) pm.collectionVariables.set(\"userRole\", claims.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Logout",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "logout"] },
-            "description": "Revokes the access token (adds jti to Redis blocklist) and clears the refresh cookie."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes the current bearer token and refresh cookie token when present."
           }
         },
         {
           "name": "Accept Invite",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/accept-invite",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "accept-invite"
+              ]
+            },
+            "description": "Accepts an invitation token from email and stores the returned auth variables.",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"token\": \"<invite-token-from-email>\",\n  \"name\": \"New Agent\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/accept-invite", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "accept-invite"] },
-            "description": "Accepts an org invitation. `token` comes from the invitation email link.\n\n**Body:**\n- `token` (required)\n- `name` (required)\n- `password` min 8 chars (required)"
-          }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "function decodeJwt(token) {",
+                  "  const payload = token.split(\".\")[1];",
+                  "  const normalized = payload.replace(/-/g, \"+\").replace(/_/g, \"/\");",
+                  "  return JSON.parse(atob(normalized));",
+                  "}",
+                  "const json = pm.response.json();",
+                  "const token = json && json.data && json.data.accessToken;",
+                  "if (token) {",
+                  "  pm.collectionVariables.set(\"accessToken\", token);",
+                  "  const claims = decodeJwt(token);",
+                  "  if (claims.sub) pm.collectionVariables.set(\"userId\", claims.sub);",
+                  "  if (claims.orgId) pm.collectionVariables.set(\"orgId\", claims.orgId);",
+                  "  if (claims.role) pm.collectionVariables.set(\"userRole\", claims.role);",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
-          "name": "Get Me",
+          "name": "Get Auth Me",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "me"] },
-            "description": "Returns the currently authenticated user's profile."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the current authenticated user profile."
           }
         }
       ]
@@ -170,93 +402,210 @@
           "name": "Get Organization",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}"] },
-            "description": "Returns the organization details. Any authenticated member can call this."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}"
+              ]
+            },
+            "description": "Returns organization details for `orgId`."
           }
         },
         {
           "name": "Update Organization",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}"
+              ]
+            },
+            "description": "Admin-only. Updates organization metadata.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Acme Support Co.\",\n  \"domain\": \"acme.com\",\n  \"planTier\": \"pro\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}"] },
-            "description": "Updates org details. **Requires ADMIN role.**\n\nAll body fields are optional."
+            }
           }
         },
         {
           "name": "List Members",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/members", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "members"] },
-            "description": "Lists all org members. **Requires min AGENT role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "members"
+              ]
+            },
+            "description": "Agent-or-higher. Lists organization members."
           }
         },
         {
           "name": "Update Member Roles",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/members/{{userId}}/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "members",
+                "{{userId}}",
+                "roles"
+              ]
+            },
+            "description": "Admin-only. Replaces a member role list. Valid roles: ADMIN, TEAM_LEAD, AGENT, VIEWER, CUSTOMER.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"roles\": [\"AGENT\"]\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/members/{{userId}}/roles", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "members", "{{userId}}", "roles"] },
-            "description": "Updates the roles of a member. **Requires ADMIN role.**\n\n**Body:**\n- `roles`: array of `UserRole` — `ADMIN | TEAM_LEAD | AGENT | VIEWER | CUSTOMER`"
+              "raw": "{\n  \"roles\": [\n    \"AGENT\"\n  ]\n}"
+            }
           }
         },
         {
           "name": "Remove Member",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/members/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "members", "{{userId}}"] },
-            "description": "Removes a member from the org. **Requires ADMIN role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/members/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "members",
+                "{{userId}}"
+              ]
+            },
+            "description": "Admin-only. Removes/deactivates membership for a user."
           }
         },
         {
           "name": "List Invitations",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/invitations", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "invitations"] },
-            "description": "Lists pending invitations. **Requires min TEAM_LEAD role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/invitations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "invitations"
+              ]
+            },
+            "description": "Team-lead-or-higher. Lists pending invitations."
           }
         },
         {
           "name": "Create Invitation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/invitations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "invitations"
+              ]
+            },
+            "description": "Team-lead-or-higher. Creates an invitation and stores `invitationId` when returned.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newagent@example.com\",\n  \"rolesToGrant\": [\n    \"AGENT\"\n  ]\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('invitationId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"invitationId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"newagent@example.com\",\n  \"rolesToGrant\": [\"AGENT\"]\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/invitations", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "invitations"] },
-            "description": "Sends an org invitation email. **Requires min TEAM_LEAD role.**\n\n**Body:**\n- `email` (required)\n- `rolesToGrant`: array of `UserRole`, min 1 (required)"
-          }
+          ]
         },
         {
-          "name": "Delete Invitation",
+          "name": "Revoke Invitation",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/invitations/{{invitationId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "invitations", "{{invitationId}}"] },
-            "description": "Cancels a pending invitation. **Requires min TEAM_LEAD role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/invitations/{{invitationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "invitations",
+                "{{invitationId}}"
+              ]
+            },
+            "description": "Team-lead-or-higher. Revokes a pending invitation."
           }
         }
       ]
@@ -265,48 +614,121 @@
       "name": "Users",
       "item": [
         {
-          "name": "Get My Profile",
+          "name": "Get My Org Profile",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "users", "me"] },
-            "description": "Returns the current user's profile within the org."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "users",
+                "me"
+              ]
+            },
+            "description": "Returns the current user from the org-scoped users module."
           }
         },
         {
           "name": "Update My Profile",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "users",
+                "me"
+              ]
+            },
+            "description": "Updates the current user profile.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Updated Name\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/me", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "users", "me"] },
-            "description": "Updates the current user's profile.\n\n**Body:**\n- `name` 1–100 chars (optional)"
+            }
           }
         },
         {
-          "name": "List Users",
+          "name": "List Org Users",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "users"] },
-            "description": "Lists all org users. **Requires ADMIN or TEAM_LEAD role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "users"
+              ]
+            },
+            "description": "Admin or team lead. Lists users in the organization."
           }
         },
         {
           "name": "Get User",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "users", "{{userId}}"] },
-            "description": "Returns a specific user's profile."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Returns a specific user by `userId`."
           }
         },
         {
           "name": "Deactivate User",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "users", "{{userId}}"] },
-            "description": "Deactivates a user. **Requires ADMIN role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/users/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "users",
+                "{{userId}}"
+              ]
+            },
+            "description": "Admin-only. Deactivates a user."
           }
         }
       ]
@@ -318,85 +740,195 @@
           "name": "List Teams",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams"] },
-            "description": "Lists all teams in the org. **Requires min AGENT role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams"
+              ]
+            },
+            "description": "Agent-or-higher. Lists active teams."
           }
         },
         {
           "name": "Create Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams"
+              ]
+            },
+            "description": "Team-lead-or-higher. Creates a team and stores `teamId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tier 1 Support\"\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('teamId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"teamId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Tier 1 Support\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams"] },
-            "description": "Creates a new team. **Requires min TEAM_LEAD role.**\n\n**Body:**\n- `name` 1–100 chars (required)"
-          }
+          ]
         },
         {
           "name": "Get Team",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams", "{{teamId}}"] },
-            "description": "Returns a team's details. **Requires min AGENT role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams",
+                "{{teamId}}"
+              ]
+            },
+            "description": "Agent-or-higher. Gets one team."
           }
         },
         {
           "name": "Update Team",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams",
+                "{{teamId}}"
+              ]
+            },
+            "description": "Team-lead-or-higher. Updates team name.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Tier 2 Support\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams", "{{teamId}}"] },
-            "description": "Updates a team name. **Requires min TEAM_LEAD role.**"
-          }
-        },
-        {
-          "name": "Delete Team",
-          "request": {
-            "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams", "{{teamId}}"] },
-            "description": "Soft-deletes a team. **Requires ADMIN role.**"
+            }
           }
         },
         {
           "name": "Add Team Member",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams",
+                "{{teamId}}",
+                "members"
+              ]
+            },
+            "description": "Team-lead-or-higher. Adds `userId` to `teamId`.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"userId\": \"{{userId}}\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}/members", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams", "{{teamId}}", "members"] },
-            "description": "Adds a user to a team. **Requires min TEAM_LEAD role.**\n\n**Body:**\n- `userId` UUID (required)"
+            }
           }
         },
         {
           "name": "Remove Team Member",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}/members/{{userId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "teams", "{{teamId}}", "members", "{{userId}}"] },
-            "description": "Removes a user from a team. **Requires min TEAM_LEAD role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}/members/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams",
+                "{{teamId}}",
+                "members",
+                "{{userId}}"
+              ]
+            },
+            "description": "Team-lead-or-higher. Removes a team member."
+          }
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/teams/{{teamId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "teams",
+                "{{teamId}}"
+              ]
+            },
+            "description": "Admin-only. Soft-deletes a team."
           }
         }
       ]
@@ -408,103 +940,239 @@
           "name": "List Tickets",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets?limit=25",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "tickets"],
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets"
+              ],
               "query": [
-                { "key": "status", "value": "OPEN", "disabled": true, "description": "NEW | OPEN | PENDING | ON_HOLD | SOLVED | CLOSED" },
-                { "key": "priority", "value": "HIGH", "disabled": true, "description": "LOW | MEDIUM | HIGH | URGENT" },
-                { "key": "assigneeId", "value": "", "disabled": true },
-                { "key": "teamId", "value": "", "disabled": true },
-                { "key": "channel", "value": "WEB", "disabled": true, "description": "WEB | EMAIL | API" },
-                { "key": "cursor", "value": "", "disabled": true, "description": "Cursor for next page (from previous response)" },
-                { "key": "limit", "value": "25", "disabled": false, "description": "Max 100" }
+                {
+                  "key": "limit",
+                  "value": "25"
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "NEW",
+                  "disabled": true
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH",
+                  "disabled": true
+                },
+                {
+                  "key": "assigneeId",
+                  "value": "{{userId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "teamId",
+                  "value": "{{teamId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "channel",
+                  "value": "WEB",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Lists tickets with optional filters. Customers only see their own tickets.\n\n**Query params (all optional):**\n- `status`, `priority`, `assigneeId`, `teamId`, `channel`\n- `cursor` + `limit` for pagination"
+            "description": "Lists tickets with cursor pagination and optional filters."
           }
         },
         {
           "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets"
+              ]
+            },
+            "description": "Creates a ticket and stores `ticketId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Login page not loading\",\n  \"description\": \"When I try to log in, the page gets stuck on a white screen.\",\n  \"priority\": \"HIGH\",\n  \"channel\": \"WEB\",\n  \"customFields\": {\n    \"browser\": \"Chrome\",\n    \"severity\": \"customer-visible\"\n  }\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('ticketId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"ticketId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"subject\": \"Login page not loading\",\n  \"description\": \"When I try to log in, the page gets stuck on a white screen.\",\n  \"priority\": \"HIGH\",\n  \"channel\": \"WEB\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets"] },
-            "description": "Creates a ticket. Automatically sets SLA deadline, enqueues acknowledgement email, SLA check, and webhook events.\n\n**Body:**\n- `subject` 1–255 chars (required)\n- `description` min 1 (required)\n- `priority` LOW | MEDIUM | HIGH | URGENT (optional, default MEDIUM)\n- `channel` WEB | EMAIL | API (optional, default WEB)\n- `customFields` object (optional)"
-          }
+          ]
         },
         {
           "name": "Get Ticket",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}"] },
-            "description": "Returns a full ticket with assignee, team, and SLA info. Customers can only fetch their own tickets."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Returns one ticket with related metadata."
           }
         },
         {
           "name": "Update Ticket",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Agent-or-higher. Updates mutable ticket fields.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"subject\": \"Updated subject\",\n  \"priority\": \"URGENT\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}"] },
-            "description": "Updates ticket fields. **Requires min AGENT role.**\n\n**Body (all optional):**\n- `subject`, `description`, `priority`, `customFields`"
+              "raw": "{\n  \"subject\": \"Updated subject\",\n  \"priority\": \"URGENT\",\n  \"customFields\": {\n    \"browser\": \"Chrome\"\n  }\n}"
+            }
           }
         },
         {
           "name": "Update Ticket Status",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "status"
+              ]
+            },
+            "description": "Changes ticket status. Valid statuses: NEW, OPEN, PENDING, ON_HOLD, SOLVED, CLOSED.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"OPEN\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "status"] },
-            "description": "Transitions ticket status through the state machine.\n\n**Allowed statuses:** `NEW | OPEN | PENDING | ON_HOLD | SOLVED | CLOSED`\n\nClosing a ticket triggers a delayed CSAT survey email."
+            }
           }
         },
         {
           "name": "Assign Ticket",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "assign"
+              ]
+            },
+            "description": "Agent-or-higher. Assigns ticket to a user and/or team. Use `null` to clear either field.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"assigneeId\": \"{{userId}}\",\n  \"teamId\": \"{{teamId}}\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/assign", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "assign"] },
-            "description": "Assigns ticket to an agent and/or team. **Requires min AGENT role.**\n\n**Body (all optional, nullable to unassign):**\n- `assigneeId` UUID or null\n- `teamId` UUID or null"
+            }
           }
         },
         {
           "name": "Delete Ticket",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}"] },
-            "description": "Soft-deletes a ticket. **Requires ADMIN role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            },
+            "description": "Admin-only. Soft-deletes a ticket."
           }
         }
       ]
@@ -516,55 +1184,169 @@
           "name": "List Comments",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "comments"] },
-            "description": "Lists all comments on a ticket. Internal comments are hidden from customers."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "description": "Lists ticket comments. Internal comments are hidden from customers."
           }
         },
         {
-          "name": "Create Comment",
+          "name": "Create Public Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "description": "Creates a public comment and stores `commentId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"We are looking into this issue and will update you shortly.\",\n  \"isInternal\": false\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('commentId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"commentId\", value);"
+                ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Create Internal Comment",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "comments"
+              ]
+            },
+            "description": "Creates an internal comment. Customers cannot see internal comments.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"body\": \"We are looking into this issue and will update you shortly.\",\n  \"isInternal\": false\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "comments"] },
-            "description": "Adds a comment/reply to a ticket.\n\n**Body:**\n- `body` min 1 char (required)\n- `isInternal` boolean (optional, default false — set to true for agent-only notes)"
-          }
+              "raw": "{\n  \"body\": \"Internal triage note for agents.\",\n  \"isInternal\": true\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"commentId\", value);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Comment",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "comments",
+                "{{commentId}}"
+              ]
+            },
+            "description": "Updates an existing comment.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"body\": \"Updated comment text.\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "comments", "{{commentId}}"] },
-            "description": "Edits a comment. Users can only edit their own comments; agents/leads have broader edit rights."
+            }
           }
         },
         {
           "name": "Delete Comment",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments/{{commentId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "comments", "{{commentId}}"] },
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/comments/{{commentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "comments",
+                "{{commentId}}"
+              ]
+            },
             "description": "Deletes a comment."
           }
         }
@@ -577,55 +1359,118 @@
           "name": "List Attachments",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "attachments"] },
-            "description": "Lists all attachments for a ticket."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "attachments"
+              ]
+            },
+            "description": "Lists attachments for a ticket."
           }
         },
         {
-          "name": "Get Presigned Upload URL",
+          "name": "Create Presigned Upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments/presign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "attachments",
+                "presign"
+              ]
+            },
+            "description": "Creates an attachment record and returns a presigned S3 PUT URL. Stores `attachmentId` when returned.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filename\": \"screenshot.png\",\n  \"mimeType\": \"image/png\",\n  \"sizeBytes\": 204800\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.attachment && res.data.attachment.id) {",
-                  "  pm.collectionVariables.set('attachmentId', res.data.attachment.id);",
-                  "}",
-                  "if (res.data && res.data.uploadUrl) {",
-                  "  console.log('Upload URL:', res.data.uploadUrl);",
-                  "  console.log('Next: PUT the file to this URL directly from the client.');",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"attachmentId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"filename\": \"screenshot.png\",\n  \"mimeType\": \"image/png\",\n  \"sizeBytes\": 204800\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments/presign", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "attachments", "presign"] },
-            "description": "Returns a presigned S3 PUT URL. The client uploads the file directly to S3 using that URL (no backend involved in the upload). Sets `attachmentId`.\n\n**Body:**\n- `filename` (required)\n- `mimeType` (required)\n- `sizeBytes` number > 0 (required)"
-          }
+          ]
         },
         {
           "name": "Get Signed Download URL",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments/{{attachmentId}}/download", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "attachments", "{{attachmentId}}", "download"] },
-            "description": "Returns a signed S3 GET URL valid for a short time window."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments/{{attachmentId}}/download",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "attachments",
+                "{{attachmentId}}",
+                "download"
+              ]
+            },
+            "description": "Returns a short-lived signed S3 download URL."
           }
         },
         {
           "name": "Delete Attachment",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments/{{attachmentId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "tickets", "{{ticketId}}", "attachments", "{{attachmentId}}"] },
-            "description": "Deletes an attachment from both S3 and the database."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/tickets/{{ticketId}}/attachments/{{attachmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "tickets",
+                "{{ticketId}}",
+                "attachments",
+                "{{attachmentId}}"
+              ]
+            },
+            "description": "Deletes an attachment record and S3 object."
           }
         }
       ]
@@ -637,69 +1482,148 @@
           "name": "List SLA Policies",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "sla-policies"] },
-            "description": "Lists all SLA policies for the org. **Requires min AGENT role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "sla-policies"
+              ]
+            },
+            "description": "Agent-or-higher. Lists SLA policies."
           }
         },
         {
           "name": "Create SLA Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "sla-policies"
+              ]
+            },
+            "description": "Admin-only. Creates an SLA policy and stores `policyId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"High Priority SLA\",\n  \"priority\": \"HIGH\",\n  \"firstResponseMinutes\": 60,\n  \"resolutionMinutes\": 480\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('policyId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"policyId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Standard SLA\",\n  \"priority\": \"HIGH\",\n  \"firstResponseMinutes\": 60,\n  \"resolutionMinutes\": 480\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "sla-policies"] },
-            "description": "Creates an SLA policy. **Requires ADMIN role.**\n\n**Body:**\n- `name` 1–100 (required)\n- `priority` LOW | MEDIUM | HIGH | URGENT (required)\n- `firstResponseMinutes` > 0 (required)\n- `resolutionMinutes` > 0 (required)"
-          }
+          ]
         },
         {
           "name": "Update SLA Policy",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies/{{policyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "sla-policies",
+                "{{policyId}}"
+              ]
+            },
+            "description": "Admin-only. Updates an SLA policy.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Strict SLA\",\n  \"firstResponseMinutes\": 30,\n  \"resolutionMinutes\": 240\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies/{{policyId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "sla-policies", "{{policyId}}"] },
-            "description": "Updates an SLA policy. **Requires ADMIN role.** All body fields optional."
-          }
-        },
-        {
-          "name": "Delete SLA Policy",
-          "request": {
-            "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies/{{policyId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "sla-policies", "{{policyId}}"] },
-            "description": "Deletes an SLA policy. **Requires ADMIN role.**"
+              "raw": "{\n  \"name\": \"Strict High Priority SLA\",\n  \"firstResponseMinutes\": 30,\n  \"resolutionMinutes\": 240\n}"
+            }
           }
         },
         {
           "name": "Set Default SLA Policy",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies/set-default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "sla-policies",
+                "set-default"
+              ]
+            },
+            "description": "Admin-only. Sets the default SLA policy for the organization.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"policyId\": \"{{policyId}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete SLA Policy",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies/{{policyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "sla-policies",
+                "{{policyId}}"
+              ]
             },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/sla-policies/set-default", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "sla-policies", "set-default"] },
-            "description": "Sets the org's default SLA policy (applied to new tickets). **Requires ADMIN role.**"
+            "description": "Admin-only. Deletes an SLA policy."
           }
         }
       ]
@@ -710,127 +1634,308 @@
         {
           "name": "List Categories",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/categories", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "categories"] },
-            "description": "Returns all KB categories. **Public — no auth required.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "categories"
+              ]
+            },
+            "description": "Public. Lists KB categories for an organization.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
           "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "categories"
+              ]
+            },
+            "description": "Agent-or-higher. Creates a category and stores `categoryId`. Add `parentId` only when creating a child category.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Getting Started\"\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('categoryId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"categoryId\", value);"
+                ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Create Child Category",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "categories"
+              ]
+            },
+            "description": "Agent-or-higher. Creates a child category using an existing `categoryId` as parent.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Getting Started\",\n  \"parentId\": null\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/categories", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "categories"] },
-            "description": "Creates a KB category. **Requires min AGENT role.**\n\n**Body:**\n- `name` (required)\n- `parentId` UUID (optional — for nested categories)"
-          }
+              "raw": "{\n  \"name\": \"Account Access\",\n  \"parentId\": \"{{categoryId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"categoryId\", value);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "List Articles",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "articles"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "articles"
+              ],
               "query": [
-                { "key": "status", "value": "PUBLISHED", "disabled": true, "description": "DRAFT | PUBLISHED | ARCHIVED" },
-                { "key": "categoryId", "value": "", "disabled": true }
+                {
+                  "key": "status",
+                  "value": "PUBLISHED",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Lists KB articles. **Public — no auth required.**\n\n**Query (optional):** `status`, `categoryId`"
+            "description": "Public. Lists KB articles with optional `status` and `categoryId` filters.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
           "name": "Search Articles",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/search?q=password reset",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "articles", "search"],
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/search",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "articles",
+                "search"
+              ],
               "query": [
-                { "key": "q", "value": "password reset", "description": "Full-text search query (required)" }
+                {
+                  "key": "q",
+                  "value": "password reset"
+                }
               ]
             },
-            "description": "Full-text search using Postgres tsvector. **Public — no auth required.**\n\n**Query:**\n- `q` search term (required)"
+            "description": "Public. Searches KB articles. Requires non-empty `q`.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
           "name": "Create Article",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "articles"
+              ]
+            },
+            "description": "Agent-or-higher. Creates an article and stores `articleId`. Omit `categoryId` if no category exists.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"How to reset your password\",\n  \"body\": \"Follow these steps to reset your password...\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"status\": \"PUBLISHED\"\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('articleId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"articleId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"How to reset your password\",\n  \"body\": \"Follow these steps to reset your password...\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"status\": \"PUBLISHED\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "articles"] },
-            "description": "Creates a KB article. **Requires min AGENT role.**\n\n**Body:**\n- `title` 1–255 (required)\n- `body` min 1 (required)\n- `categoryId` UUID (optional)\n- `status` DRAFT | PUBLISHED | ARCHIVED (optional)"
-          }
+          ]
         },
         {
           "name": "Get Article",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "articles", "{{articleId}}"] },
-            "description": "Returns a KB article and logs a view. **Public — no auth required.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "Public. Gets one KB article and records a view.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
           "name": "Update Article",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "Agent-or-higher. Updates article fields.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"How to reset your password (updated)\",\n  \"status\": \"PUBLISHED\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "articles", "{{articleId}}"] },
-            "description": "Updates a KB article. **Requires min AGENT role.** All body fields optional."
+            }
           }
         },
         {
           "name": "Delete Article",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/{{articleId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "kb", "articles", "{{articleId}}"] },
-            "description": "Deletes a KB article. **Requires ADMIN role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/kb/articles/{{articleId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "kb",
+                "articles",
+                "{{articleId}}"
+              ]
+            },
+            "description": "Admin-only. Deletes an article."
           }
         }
       ]
@@ -839,34 +1944,80 @@
       "name": "CSAT",
       "item": [
         {
-          "name": "Get Survey (Public)",
+          "name": "Get Survey Public",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/csat/{{surveyId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "csat", "{{surveyId}}"] },
-            "description": "Fetches a CSAT survey by its token ID. **Public — no auth required.** The `surveyId` comes from the link in the CSAT email."
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/csat/{{surveyId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "csat",
+                "{{surveyId}}"
+              ]
+            },
+            "description": "Public. Fetches a CSAT survey by survey ID from the email link.",
+            "auth": {
+              "type": "noauth"
+            }
           }
         },
         {
-          "name": "Submit Survey (Public)",
+          "name": "Submit Survey Public",
           "request": {
-            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/csat/{{surveyId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "csat",
+                "{{surveyId}}",
+                "submit"
+              ]
+            },
+            "description": "Public. Submits a CSAT response. Score must be 1 through 5.",
+            "auth": {
+              "type": "noauth"
+            },
             "body": {
               "mode": "raw",
               "raw": "{\n  \"score\": 5,\n  \"comment\": \"Great support, very fast response!\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/csat/{{surveyId}}/submit", "host": ["{{baseUrl}}"], "path": ["api", "v1", "csat", "{{surveyId}}", "submit"] },
-            "description": "Submits a CSAT score. **Public — no auth required.**\n\n**Body:**\n- `score` number 1–5 (required)\n- `comment` string (optional)"
+            }
           }
         },
         {
           "name": "List Org CSAT Results",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/csat", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "csat"] },
-            "description": "Lists all CSAT submissions for the org. **Requires min AGENT role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/csat",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "csat"
+              ]
+            },
+            "description": "Agent-or-higher. Lists CSAT submissions for the organization."
           }
         }
       ]
@@ -878,64 +2029,140 @@
           "name": "List Webhooks",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "webhooks"] },
-            "description": "Lists all registered webhooks. **Requires ADMIN role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "webhooks"
+              ]
+            },
+            "description": "Admin-only. Lists registered webhooks."
           }
         },
         {
           "name": "Create Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "webhooks"
+              ]
+            },
+            "description": "Admin-only. Registers a webhook and stores `webhookId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://hooks.example.com/supportdesk\",\n  \"events\": [\n    \"ticket.created\",\n    \"ticket.status_changed\",\n    \"comment.created\"\n  ]\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('webhookId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"webhookId\", value);"
+                ]
               }
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"url\": \"https://hooks.example.com/supportdesk\",\n  \"events\": [\"ticket.created\", \"ticket.status_changed\", \"comment.created\"]\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "webhooks"] },
-            "description": "Registers a webhook endpoint. **Requires ADMIN role.**\n\n**Body:**\n- `url` valid URL (required)\n- `events` string[] min 1 (required) — e.g. `ticket.created`, `ticket.status_changed`, `comment.created`"
-          }
+          ]
         },
         {
           "name": "Update Webhook",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks/{{webhookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "webhooks",
+                "{{webhookId}}"
+              ]
+            },
+            "description": "Admin-only. Updates webhook URL, events, or active state.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"active\": false,\n  \"events\": [\"ticket.created\"]\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks/{{webhookId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "webhooks", "{{webhookId}}"] },
-            "description": "Updates a webhook. **Requires ADMIN role.** All body fields optional."
-          }
-        },
-        {
-          "name": "Delete Webhook",
-          "request": {
-            "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks/{{webhookId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "webhooks", "{{webhookId}}"] },
-            "description": "Deletes a webhook. **Requires ADMIN role.**"
+              "raw": "{\n  \"active\": false,\n  \"events\": [\n    \"ticket.created\"\n  ]\n}"
+            }
           }
         },
         {
           "name": "Rotate Webhook Secret",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks/{{webhookId}}/rotate-secret", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "webhooks", "{{webhookId}}", "rotate-secret"] },
-            "description": "Generates a new HMAC signing secret for a webhook. **Requires ADMIN role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks/{{webhookId}}/rotate-secret",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "webhooks",
+                "{{webhookId}}",
+                "rotate-secret"
+              ]
+            },
+            "description": "Admin-only. Rotates the webhook HMAC signing secret."
+          }
+        },
+        {
+          "name": "Delete Webhook",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/webhooks/{{webhookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "webhooks",
+                "{{webhookId}}"
+              ]
+            },
+            "description": "Admin-only. Deletes a webhook."
           }
         }
       ]
@@ -947,64 +2174,172 @@
           "name": "List Canned Responses",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "canned-responses"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "canned-responses"
+              ],
               "query": [
-                { "key": "teamId", "value": "", "disabled": true },
-                { "key": "search", "value": "", "disabled": true }
+                {
+                  "key": "teamId",
+                  "value": "{{teamId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "password",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Lists canned response templates. **Requires min AGENT role.**\n\n**Query (optional):** `teamId`, `search`"
+            "description": "Agent-or-higher. Lists canned responses with optional `teamId` and `search` filters."
           }
         },
         {
-          "name": "Create Canned Response",
+          "name": "Create Global Canned Response",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "canned-responses"
+              ]
+            },
+            "description": "Agent-or-higher. Creates an organization-wide canned response and stores `responseId`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Password Reset Instructions\",\n  \"body\": \"Hi {{customer_name}}, to reset your password please visit...\"\n}"
+            }
+          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.data && res.data.id) {",
-                  "  pm.collectionVariables.set('responseId', res.data.id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"responseId\", value);"
+                ]
               }
             }
-          ],
+          ]
+        },
+        {
+          "name": "Create Team Canned Response",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "canned-responses"
+              ]
+            },
+            "description": "Agent-or-higher. Creates a team-scoped canned response.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Password Reset Instructions\",\n  \"body\": \"Hi {{customer_name}}, to reset your password please visit...\",\n  \"teamId\": null\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "canned-responses"] },
-            "description": "Creates a canned response. **Requires min AGENT role.**\n\n**Body:**\n- `title` min 1 (required)\n- `body` min 1 (required)\n- `teamId` UUID (optional — null = org-wide)"
-          }
+              "raw": "{\n  \"title\": \"Tier 1 Escalation\",\n  \"body\": \"I am escalating this to our Tier 2 team.\",\n  \"teamId\": \"{{teamId}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const value = json && json.data && json && json.data.id;",
+                  "if (value) pm.collectionVariables.set(\"responseId\", value);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Update Canned Response",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses/{{responseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "canned-responses",
+                "{{responseId}}"
+              ]
+            },
+            "description": "Agent-or-higher. Updates canned response fields.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Updated Title\",\n  \"body\": \"Updated response body.\"\n}"
-            },
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses/{{responseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "canned-responses", "{{responseId}}"] },
-            "description": "Updates a canned response. **Requires min AGENT role.** All body fields optional."
+            }
           }
         },
         {
           "name": "Delete Canned Response",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses/{{responseId}}", "host": ["{{baseUrl}}"], "path": ["api", "v1", "orgs", "{{orgId}}", "canned-responses", "{{responseId}}"] },
-            "description": "Deletes a canned response. **Requires min TEAM_LEAD role.**"
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/canned-responses/{{responseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "canned-responses",
+                "{{responseId}}"
+              ]
+            },
+            "description": "Team-lead-or-higher. Deletes a canned response."
           }
         }
       ]
@@ -1016,80 +2351,170 @@
           "name": "Ticket Stats",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/analytics/tickets",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "analytics", "tickets"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "analytics",
+                "tickets"
+              ],
               "query": [
-                { "key": "from", "value": "2026-01-01", "disabled": true, "description": "ISO date string" },
-                { "key": "to", "value": "2026-04-23", "disabled": true, "description": "ISO date string" }
+                {
+                  "key": "from",
+                  "value": "2026-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Ticket volume and status breakdown for the org. **Requires min AGENT role.**\n\nDefaults to last 30 days if `from`/`to` omitted."
+            "description": "Agent-or-higher. Ticket volume and status breakdown."
           }
         },
         {
           "name": "SLA Breach Stats",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/analytics/sla",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "analytics", "sla"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "analytics",
+                "sla"
+              ],
               "query": [
-                { "key": "from", "value": "", "disabled": true },
-                { "key": "to", "value": "", "disabled": true }
+                {
+                  "key": "from",
+                  "value": "2026-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31",
+                  "disabled": true
+                }
               ]
             },
-            "description": "SLA breach counts and breach rate. **Requires min AGENT role.**"
+            "description": "Agent-or-higher. SLA breach counts and breach rate."
           }
         },
         {
           "name": "CSAT Stats",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/analytics/csat",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "analytics", "csat"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "analytics",
+                "csat"
+              ],
               "query": [
-                { "key": "from", "value": "", "disabled": true },
-                { "key": "to", "value": "", "disabled": true }
+                {
+                  "key": "from",
+                  "value": "2026-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Average CSAT score and distribution. **Requires min AGENT role.**"
+            "description": "Agent-or-higher. Average CSAT and distribution."
           }
         },
         {
           "name": "Agent Resolution Stats",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/analytics/agents",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "analytics", "agents"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "analytics",
+                "agents"
+              ],
               "query": [
-                { "key": "from", "value": "", "disabled": true },
-                { "key": "to", "value": "", "disabled": true }
+                {
+                  "key": "from",
+                  "value": "2026-01-01",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Per-agent ticket resolution metrics. **Requires min TEAM_LEAD role.**"
+            "description": "Team-lead-or-higher. Per-agent resolution metrics."
           }
         },
         {
           "name": "Audit Log",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/v1/orgs/{{orgId}}/analytics/audit-log",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "orgs", "{{orgId}}", "analytics", "audit-log"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orgs",
+                "{{orgId}}",
+                "analytics",
+                "audit-log"
+              ],
               "query": [
-                { "key": "entityType", "value": "", "disabled": true, "description": "Filter by entity type e.g. ticket, comment" },
-                { "key": "cursor", "value": "", "disabled": true, "description": "Cursor for next page" }
+                {
+                  "key": "entityType",
+                  "value": "ticket",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             },
-            "description": "Paginated audit event log. **Requires ADMIN role.**\n\n**Query (optional):** `entityType`, `cursor`"
+            "description": "Admin-only. Paginated audit log."
           }
         }
       ]
