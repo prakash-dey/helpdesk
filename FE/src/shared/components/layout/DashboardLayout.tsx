@@ -1,6 +1,6 @@
-import { Outlet } from 'react-router-dom';
-import { Header } from '@/shared/components/layout/Header';
-import { Sidebar } from '@/shared/components/layout/Sidebar';
+import { Outlet } from "react-router-dom";
+import { Header } from "@/shared/components/layout/Header";
+import { Sidebar } from "@/shared/components/layout/Sidebar";
 
 export function DashboardLayout() {
   return (

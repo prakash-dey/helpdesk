@@ -13,6 +13,7 @@ import { TicketListPage } from "@/features/tickets/TicketListPage";
 import { ForbiddenPage } from "@/features/system/ForbiddenPage";
 import { NotFoundPage } from "@/features/system/NotFoundPage";
 import { UnauthorizedPage } from "@/features/system/UnauthorizedPage";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 const router = createBrowserRouter([
   {
@@ -35,22 +36,25 @@ const router = createBrowserRouter([
     path: "*",
     element: <NotFoundPage />,
   },
+  
   {
-    path: "/orgs/:orgId",
-    element: <DashboardLayout />,
+    element: <ProtectedRoute />,
     children: [
-      { index: true, element: <Navigate to="dashboard" replace /> },
-      { path: "dashboard", element: <DashboardPage /> },
-      { path: "tickets", element: <TicketListPage /> },
-      { path: "kb", element: <KnowledgeBasePage /> },
-      { path: "analytics", element: <AnalyticsPage /> },
-      { path: "settings", element: <SettingsPage /> },
+      {
+        path: "orgs/:orgId",
+        element: <DashboardLayout />,
+        children: [
+          { index: true, element: <Navigate to="dashboard" replace /> },
+          { path: "dashboard", element: <DashboardPage /> },
+          { path: "tickets", element: <TicketListPage /> },
+          { path: "kb", element: <KnowledgeBasePage /> },
+          { path: "analytics", element: <AnalyticsPage /> },
+          { path: "settings", element: <SettingsPage /> },
+        ],
+      },
     ],
   },
-  {
-    path: '*',
-    element: <NotFoundPage />,
-  },
+  
 ]);
 
 export function AppRouter() {
